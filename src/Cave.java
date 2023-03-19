@@ -1,14 +1,11 @@
 import java.io.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Cave {
 
     public static void main(String[] args) throws IOException {
-        Map<Integer, List<Integer>> solutions = new HashMap();
+        Map<Integer, List<List<Integer>>> solutions = new HashMap();
 
         BufferedReader bufferedReader = new BufferedReader(new FileReader("./resources/CAV.IN"));
 
@@ -41,14 +38,16 @@ public class Cave {
         return adjacencyMatix;
     }
 
-    private static void hamiltonianPath(int[][] adjacencyMatrix, Map<Integer, List<Integer>> solutions, int[] path, Integer depth, int sum) {
+    private static void hamiltonianPath(int[][] adjacencyMatrix, Map<Integer,List<List<Integer>>> solutions, int[] path, Integer depth, Integer sum) {
         do {
-            sum += nextVertex(adjacencyMatrix, path, depth);
+            nextVertex(adjacencyMatrix, path, depth);
 
             if (path[depth] == -1) {
                 return;
-            } else if (depth +1 == path.length) {
-                solutions.put(sum, Arrays.stream(path).boxed().collect(Collectors.toList()));
+            } else if (depth + 1 == path.length) {
+                Integer weight = calculateWeight(adjacencyMatrix, path);
+                solutions.computeIfAbsent(weight, k -> new ArrayList<>());
+                solutions.get(weight).add(Arrays.stream(path).boxed().collect(Collectors.toList()));
             } else {
                 hamiltonianPath(adjacencyMatrix, solutions, path, depth + 1, sum);
             }
@@ -56,11 +55,11 @@ public class Cave {
         } while (true);
     }
 
-    private static Integer nextVertex(int[][] adjacencyMatrix, int[] path, Integer depth) {
+    private static void nextVertex(int[][] adjacencyMatrix, int[] path, Integer depth) {
         do {
             path[depth] = (path[depth] + 2 )% (path.length + 1) -1;
             if (path[depth] == -1)
-                return 0;
+                return ;
             if (adjacencyMatrix[path[depth - 1]][ path[depth]] != 0) {
                 for (int i = 0; i < depth; ++i) {
                     if (path[i] == path[depth])
@@ -69,29 +68,41 @@ public class Cave {
                             (i < path.length -1 ||
                                     (depth == path.length -1 && adjacencyMatrix[path[path.length -1]][path[0]] != 0))) {
 
-                        return adjacencyMatrix[path[depth]][path[depth -1]];
+                        return;
                     }
                 }
             }
         } while (true);
     }
 
-    private static void saveResultsToFile(Map<Integer, List<Integer>> solutions) throws IOException {
+    private static Integer calculateWeight(int[][] adjacencyMatrix, int [] path) {
+        int sum  = 0;
+        for (int i = 0; i < path.length -1; ++i) {
+         sum += adjacencyMatrix[path[i]][path[i +1]];
+        }
+
+        sum += adjacencyMatrix[path[path.length -1]][0];
+
+        return sum;
+    }
+
+    private static void saveResultsToFile(Map<Integer, List<List<Integer>>> solutions) throws IOException {
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("./resources/CAV.OUT"));
 
-        solutions.forEach((key, value) -> {
-            List<Integer> incrementValuesToPresentResults = value.stream().map(i -> ++i)
-                    .collect(Collectors.toList());
-
+        solutions.forEach((key, value) -> value.forEach(list -> {
             try {
-                bufferedWriter.write(String.format("Amount of hard paths : %d path: %s %n", key - value.size(), incrementValuesToPresentResults.stream()
+                bufferedWriter.write(String.format("Amount of hard paths : %d path: %s %n", ((key  - value.size() ) / 2) - 1, list.stream()
+                        .map(v ->  v + 1)
                         .map(String::valueOf)
                         .collect(Collectors.joining(" "))));
+
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
-        });
+        }));
 
         bufferedWriter.close();
     }
+
 }
+
