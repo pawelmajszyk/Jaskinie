@@ -2,6 +2,12 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+/**
+ *
+ * Wynikiem miał być pojedyńczy wynik, jednak zwróciłem liste wyników ze względu na wielokrotność wyników o takiej samej wadze
+ *
+ */
 public class Cave {
 
     public static void main(String[] args) throws IOException {
@@ -10,7 +16,6 @@ public class Cave {
         BufferedReader bufferedReader = new BufferedReader(new FileReader("./resources/CAV.IN"));
 
         int numberOfVertexes = Integer.parseInt(bufferedReader.readLine().split(" ")[0]);
-
         int[][] adjacencyMatrix = readInputFile(bufferedReader, numberOfVertexes);
 
         int[] path = new int[numberOfVertexes];
@@ -20,7 +25,6 @@ public class Cave {
             path[i] = -1;
 
         hamiltonianPath(adjacencyMatrix, solutions, path, 1, 0);
-
         saveResultsToFile(solutions);
     }
 
@@ -31,17 +35,16 @@ public class Cave {
             String[] edgeData = bufferedReader.readLine().split(" ");
 
             adjacencyMatix[Integer.parseInt(edgeData[0]) -1][Integer.parseInt(edgeData[1]) -1] = "0".equals(edgeData[2]) ? 1 : 2; // if path is hard then 2 else 1
-            adjacencyMatix[Integer.parseInt(edgeData[1]) -1][Integer.parseInt(edgeData[0]) -1] = "0".equals(edgeData[2]) ? 1 : 2; // graph considered bi-directional
-
+            adjacencyMatix[Integer.parseInt(edgeData[1]) -1][Integer.parseInt(edgeData[0]) -1] = "0".equals(edgeData[2]) ? 1 : 2; // graph considered bi-directional/ graph considered bi-directional
         }
 
         return adjacencyMatix;
+
     }
 
     private static void hamiltonianPath(int[][] adjacencyMatrix, Map<Integer,List<List<Integer>>> solutions, int[] path, Integer depth, Integer sum) {
         do {
             nextVertex(adjacencyMatrix, path, depth);
-
             if (path[depth] == -1) {
                 return;
             } else if (depth + 1 == path.length) {
